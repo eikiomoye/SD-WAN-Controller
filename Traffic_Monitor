@@ -1,0 +1,238 @@
+import pyshark
+import threading
+import time
+from datetime import datetime, timedelta
+import sqlite3
+import socket
+import statistics
+from threading import Thread
+import requests
+
+conn = sqlite3.connect('packet_database1.db')
+cursor = conn.cursor()
+
+cursor.execute('''CREATE TABLE IF NOT EXISTS packets (
+                  id INTEGER PRIMARY KEY AUTOINCREMENT,
+                  timestamp TEXT,
+                  source_ip TEXT,
+                  destination_ip TEXT,
+                  source_port INTEGER,
+                  destination_port INTEGER,
+                  protocol TEXT,
+                  length INTEGER,
+                  window_size INTEGER,
+                  is_request INTEGER,
+                  congestion_level TEXT
+                  )''')
+
+
+class TrafficFlowMonitor:
+
+    def _init_(self, controller_ip, controller_port):
+        self.controller_ip = controller_ip
+        self.controller_port = controller_port
+        self.capture_thread = None
+        self.capture = pyshark.LiveCapture(interface='eth0')
+        self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        self.start_monitoring()
+
+    def start_monitoring(self):
+        self.capture_thread = threading.Thread(target=self.capture_packets)
+        self.capture_thread.start()
+
+    def capture_packets(self):
+        conn = sqlite3.connect('packet_database1.db')
+        cursor = conn.cursor()
+        cursor.execute('''CREATE TABLE IF NOT EXISTS packets (
+                  id INTEGER PRIMARY KEY AUTOINCREMENT,
+                  timestamp TEXT,
+                  source_ip TEXT,
+                  destination_ip TEXT,
+                  source_port INTEGER,
+                  destination_port INTEGER,
+                  protocol TEXT,
+                  length INTEGER,
+                  window_size INTEGER,
+                  is_request INTEGER,
+                  congestion_level TEXT
+                  )''')
+        header = self.get_headers(cursor)
+        print(header)
+        print("Transmitting packet without congestion")
+        for packet in self.capture.sniff_continuously():
+            self.handle_packet(packet, cursor)
+
+    def handle_packet(self, packet, cursor):
+        # global packet_count, total_packet_length
+        if packet.transport_layer == "TCP":
+            timestamp = packet.sniff_time.strftime('%Y-%m-%d %H:%M:%S')
+            source_ip = packet.ip.src
+            destination_ip = packet.ip.dst
+            source_port = int(packet[packet.transport_layer].srcport)
+            destination_port = int(packet[packet.transport_layer].dstport)
+            protocol = packet.transport_layer
+            length = int(packet.length)
+            window_size = int(packet.tcp.window_size)
+            is_request = 0
+
+            congestion_level = self.calculate_congestion_level(packet)
+            # Check if the packet is an HTTP request
+            if 'http' in packet and packet.http.method:
+                is_request = 1
+
+            cursor.execute('''SELECT * FROM packets WHERE source_ip = ? AND destination_ip = ? AND protocol = ? AND is_request = ?''',
+                    (source_ip, destination_ip, protocol, is_request))
+            existing_packet = cursor.fetchone()
+            if existing_packet:
+                # Update the existing record with the new information
+                cursor.execute('''UPDATE packets SET timestamp = ?, length = ?, window_size = ?, congestion_level = ? WHERE id = ?''',
+                            (timestamp, length, window_size, congestion_level, existing_packet[0]))
+                # print("Updated Record:")
+                header = self.get_headers(cursor)
+                print(existing_packet)
+                # print(header, existing_packet)
+            else:
+                # Insert the packet information into the database
+                cursor.execute('''INSERT INTO packets (timestamp, source_ip, destination_ip, source_port, destination_port, protocol, length, window_size, is_request, congestion_level)
+                                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)''',
+                            (timestamp, source_ip, destination_ip, source_port, destination_port, protocol, length, window_size, is_request, congestion_level))
+                # print("Added Record:")
+                new_record_id = cursor.lastrowid
+                cursor.execute('''SELECT * FROM packets WHERE id = ?''', (new_record_id,))
+                new_record = cursor.fetchone()
+                header = self.get_headers(cursor)
+                print(new_record)
+                # print(header, new_record)
+
+
+            # total_packet_length += int(packet.length)
+            # packet_count += 1
+            # Process and store packet information, calculate congestion, and set congestion flags
+            # For simulation, let's assume congestion level is calculated based on packet length
+            # congestion_level = self.calculate_congestion_level(int(packet.length))
+            
+            flow_id = self.get_flow_id(packet)
+
+            if flow_id:
+                # Handle the packet and congestion management for the identified flow
+                # congestion_level = self.calculate_congestion_level(flow_id)
+                if congestion_level == "High" or congestion_level == "Medium":
+                    print(f"Congestion detected - {congestion_level}")
+                    congestion_flag = True
+                    self.send_congestion_flag(congestion_flag, flow_id)
+                    
+                    # After handling the congestion
+                    print("Transmitting packets without congestion")
+                    
+                # else:
+                #     print("Low Congestion")
+                
+            else:
+                print("Flow ID not identified for packet:", 'flowId: ', flow_id)
+        else:
+            print('Non-TCP Packets')
+    
+    def get_headers(self, cursor):
+        cursor.execute("PRAGMA table_info(packets)")
+        header_info = cursor.fetchall()
+        header_names = [info[1] for info in header_info]
+        return header_names
+
+    # Get flowId from packet header
+    def get_flow_id(self, packet):
+        if packet.transport_layer=="TCP" or hasattr(packet, "ip") and hasattr(packet, packet.transport_layer):
+            ip_src = packet.ip.src
+            ip_dst = packet.ip.dst
+            src_port = getattr(packet[packet.transport_layer], "srcport", None)
+            dst_port = getattr(packet[packet.transport_layer], "dstport", None)
+
+            # Generate a flow ID based on source/destination IP and port numbers
+            # flow_id = f"{ip_src}:{src_port}-{ip_dst}:{dst_port}"
+            flow_id = f"{ip_src}"
+            return flow_id
+        return None
+
+
+    def calculate_congestion_level(self, packet):
+        global packet_count, packet_loss_count, latency_values
+
+        # Increment packet count
+        packet_count += 1
+        
+        # Check for packet loss
+        # print("Sniff TIme", packet.sniff_time, packet.tcp.time_relative)
+        time_relative = float(packet.frame_info.time_relative)
+        # print(f"{packet.sniff_time} - {time_relative}")
+        # print(f"{packet.sniff_time} - {timedelta(seconds=time_relative)}")
+        # print(f"{packet.sniff_time - timedelta(seconds=time_relative)}")
+        if (packet.sniff_time - timedelta(seconds=time_relative)) > (packet.sniff_time + timedelta(seconds=1.0)):
+            packet_loss_count += 1 #
+
+        # Calculate packet latency for response packets
+        if 'response' in packet.tcp.flags_str.lower():
+            latency = packet.sniff_time - timedelta(seconds=time_relative)
+            latency_values.append(latency.total_seconds())
+            print(f"Latency: {latency.total_seconds()} seconds")
+
+        # Calculate packet loss percentage
+        if packet_count > 0:
+            packet_loss_percentage = (packet_loss_count / packet_count) * 100
+        else:
+            packet_loss_percentage = 0.0
+
+        # Calculate average latency
+        average_latency = statistics.mean(latency_values)
+
+        window_size = int(packet.tcp.window_size)
+        
+        high_window_size = window_size > 30000 and window_size < 60000
+        medium_window_size = window_size > 15000 and window_size < 29999
+
+        # Determine congestion level based on packet loss and latency
+        congestion_level = "Low"
+        #the 5 is 5% and 0.5
+        if packet_loss_percentage > 5 or average_latency > 0.5 or high_window_size:
+            congestion_level = "High"
+        elif packet_loss_percentage > 2 or average_latency > 0.3 or medium_window_size:
+            congestion_level = "Medium"
+        
+        return congestion_level
+
+        # Print congestion analysis results
+        print(f"Packet Loss Percentage: {packet_loss_percentage:.2f}%")
+        print(f"Average Latency: {average_latency:.2f} seconds")
+        print(f"Congestion Level: {congestion_level}")
+
+  
+
+    def send_congestion_flag(self, congestion_flag, flow_id):
+        message = f"Congestion - {flow_id}" if congestion_flag else "No Congestion - {flow_id}"
+        
+        url = "http://192.168.100.2:9000/receive"
+        # url = f"http://{self.controller_ip}:{self.controller_port}/receive"
+        response = requests.post(url, data=message)
+        if response.status_code == 200:
+            response_data = response.text
+            sent_time = time.strftime('%Y-%m-%d %H:%M:%S') 
+            print(f"Congestion flowID sent @ t- {sent_time}")
+        else:
+            print("Failed to send congestion flowID")
+
+
+
+if _name_ == "_main_":
+    monitor = TrafficFlowMonitor(controller_ip="192.168.100.2", controller_port=9000)
+    # print("initialising monitor...") 
+
+    total_packet_length = 0
+    packet_count = 0
+    packet_loss_count = 0
+    latency_values = [0]
+    start_time = time.time()
+    
+
+    try:
+        while True:
+            time.sleep(1)
+    except KeyboardInterrupt:
+        pass
