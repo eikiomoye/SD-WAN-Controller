@@ -1,0 +1,253 @@
+import socket
+import time
+import paramiko
+import telnetlib
+from collections import defaultdict
+from flask import Flask, request
+app = Flask(__name__)
+
+class SDWANController:
+
+   
+
+    def __init__(self, monitor_ip, monitor_port, router_ips, router_username, router_password, router_enable_password):
+
+        self.link_capacity = {"192.168.3.2": 100, "192.168.5.2": 100, "192.168.7.2": 100}
+        self.routing_table = self.default_wans_capacity()  # Default route for all flows
+        self.link_used_capacity = {
+            link: 0 for link in self.link_capacity #The used link capacity should reflect the default_capacity
+        }
+        self.monitor_ip = monitor_ip
+        self.monitor_port = monitor_port
+        self.router_ips = router_ips
+        self.router_username = router_username
+        self.router_password = router_password
+        self.router_enable_password = router_enable_password
+        self.default_routing_table_r5 ={
+            "192.168.1.0": {"next_hop": "192.168.4.2"},
+            "192.168.2.0": {"next_hop": "192.168.4.2"},
+            "192.168.10.0": {"next_hop": "192.168.4.2"},
+            "192.168.20.0": {"next_hop": "192.168.4.2"},
+            "192.168.30.0": {"next_hop": "192.168.4.2"},
+            "192.168.40.0": {"next_hop": "192.168.4.2"},
+            "192.168.3.0": {"next_hop": "192.168.4.2"},
+            "192.168.5.0": {"next_hop": "192.168.6.2"},
+            "192.168.7.0": {"next_hop": "192.168.8.2"},
+            "192.168.9.0": {"next_hop": "192.168.3.2"},
+            "192.168.11.0": {"next_hop": "192.168.3.2"},
+            "192.168.4.0": {"next_hop": "192.168.3.2"},
+            "192.168.6.0": {"next_hop": "192.168.5.2"},
+            "192.168.8.0": {"next_hop": "192.168.7.2"},
+        }
+
+        self.default_routing_table_r1 = {
+            "192.168.9.0": {"next_hop": "192.168.3.2"},
+            "192.168.9.0": {"next_hop": "192.168.5.2"},
+            "192.168.9.0": {"next_hop": "192.168.7.2"},
+            "192.168.11.0": {"next_hop": "192.168.3.2"},
+            "192.168.11.0": {"next_hop": "192.168.5.2"},
+            "192.168.11.0": {"next_hop": "192.168.7.2"},
+            "192.168.4.0": {"next_hop": "192.168.3.2"},
+            "192.168.6.0": {"next_hop": "192.168.5.2"},
+            "192.168.8.0": {"next_hop": "192.168.7.2"},
+        }
+        self.setup_initial_routing_on_routers()
+
+    
+    def default_wans_capacity(self):
+        return {
+            "192.168.1.0": {"next_hop": "192.168.3.2", "default_capacity": 55},
+            "192.168.2.0": {"next_hop": "192.168.3.2", "default_capacity": 15},
+            "192.168.10.0": {"next_hop": "192.168.5.2", "default_capacity": 35},
+            "192.168.20.0": {"next_hop": "192.168.5.2", "default_capacity": 30},
+            "192.168.30.0": {"next_hop": "192.168.7.2", "default_capacity": 30},
+            "192.168.40.0": {"next_hop": "192.168.7.2", "default_capacity": 35},
+        }
+
+        
+    def setup_initial_routing_on_routers(self):
+
+        print("Static route update for Edge router one...")
+        self.update_routing_on_routers(self.router_ips[0], self.default_routing_table_r1)
+        print("Static IP route is Updated in Edge Router one.")
+        print("Static route update for Edge router two...")
+        self.update_routing_on_routers(self.router_ips[1], self.default_routing_table_r5)
+        print("Static IP route is Updated in Edge Router one.")
+        # for routing_table
+
+     
+    def handle_congestion_event__(self, flow_id):
+
+        # Show the initial bandwidth associated with the flowID
+        # Update the bandwidth
+        # Show the updated bandwidth
+
+        print("Handle congestion call")
+        # Handle congestion event and perform rerouting if needed
+        congested_links = self.detect_congested_links()
+        print("Congested Links: ", congested_links)
+
+        new_link = self.routing_table[flow_id]
+        
+        if(congested_links):
+            for link in congested_links:
+                print(f"link({link}) : flowID({flow_id})")
+                if flow_id in self.routing_table and self.routing_table[flow_id] == link:
+                    new_link = self.choose_alternative_link(link, flow_id)
+        else:
+            new_link = self.choose_alternative_link(new_link, flow_id)
+        
+        # if new_link != link:
+        self.update_routing_table(flow_id, new_link)
+        print(f"Rerouted flow {flow_id} to link {new_link} due to congestion.")
+            
+            
+
+    def handle_congestion_event(self, flow_id):
+
+        # self.dumb_bandwidth()
+        # return
+    
+        ip_pattern = f"{flow_id.rsplit('.', 1)[0]}."
+        congested_link = None
+        for key in self.routing_table:
+            if key.startswith(ip_pattern):
+                print("key matched...", key, self.routing_table[key])
+                congested_link = key
+                break 
+
+        congested_wan = self.routing_table.get(congested_link).get("next_hop")
+        print("Match -->",congested_link)
+        print("Congested wa -->", congested_wan) 
+
+        if(congested_link != None):
+            alternative_link = self.choose_alternative_link(congested_wan, flow_id)
+        
+        if alternative_link != None:
+            print(f"alternative line found::{alternative_link}")
+            self.update_routing_table(congested_link, alternative_link)
+     # print(f"Rerouted flow {congested_link} to link {alternative_link} due to congestion.")
+
+
+        return
+        # Check if the link associated with flow_id is congested
+        # ip_pattern = ".".join(flow_id.rsplit(".", 1)[0:2]) + "."
+
+        if flow_id in self.routing_table and self.routing_table[flow_id] in self.link_capacity:
+            congested_link = self.routing_table[flow_id]
+
+            # Check if the `congested link is indeed congested
+            # if self.link_capacity[congested_link] < 50:  # Adjust the congestion threshold as needed
+            
+            # Find an alternative link that is not congested
+            alternative_link = self.choose_alternative_link(congested_link, flow_id)
+
+            # Update the routing table if an alternative link is found
+            if alternative_link:
+                self.update_routing_table(flow_id, alternative_link)
+                print(f"Rerout`ed flow {flow_id} to link {alternative_link} due to congestion.")
+
+    def update_routing_on_routers(self, router_ip, routing_table):
+        try:
+            with telnetlib.Telnet(router_ip) as tn:
+                tn.read_until(b"Username:")
+                tn.write(self.router_username.encode('utf-8') + b"\n")
+
+                tn.read_until(b"Password:")
+                tn.write(self.router_password.encode('utf-8') + b"\n")
+
+                tn.write(b"enable\n")
+                result, _, _ = tn.expect([b"Password:", b"#"])
+                if result == 0:
+                    tn.write(self.router_enable_password.encode('utf-8') + b"\n")
+
+                tn.write(b"configure terminal\n")
+                tn.read_until(b"#")
+
+                for flow_id, route_info in routing_table.items():
+                    next_hop = route_info["next_hop"]
+                    command = f"ip route {flow_id} 255.255.255.0 {next_hop}\n"
+                    tn.write(command.encode('utf-8'))
+                    result, _, _ = tn.expect([b"#", b"% Invalid input"])
+                    if result == 1:
+                        print(f"Error updating routing for flow {flow_id} to {next_hop}")
+                    print(f"Command sent: {command}")
+
+                tn.write(b"exit\n")
+
+        except Exception as e:
+            print(f"Error updating routing on router {router_ip}: {e}")
+
+    def detect_congested_links(self):
+        congested_links = []
+        for link, capacity in self.link_capacity.items():
+            print(f"Detect congestion -> link({link}), capacity({capacity})")
+            used_capacity = self.link_used_capacity[link]
+            if used_capacity / capacity >= 0.8:  # Threshold set to 80% usage
+                congested_links.append(link)
+        return congested_links
+
+
+    def choose_alternative_link(self, congested_link, flow_id):
+        suitable_alternatives = {key: value for key, value in self.link_capacity.items() if key != congested_link}
+        alternative_link = None
+        print(f"Suitable alternative links:: {suitable_alternatives}")
+        for key, value in suitable_alternatives.items():
+            if value - self.link_used_capacity.get(key) >= self.routing_table.get("192.168.2.0", {}).get("default_capacity"):
+                # alternative_link = {key: value}
+                alternative_link = key
+                break 
+        return alternative_link
+    
+        print("Suitable links", suitable_alternatives)
+        # suitable_alternatives = [link for link in self.link_capacity if link != congested_link]
+        for link in suitable_alternatives:
+            if self.link_capacity[link] - self.link_used_capacity[link] >= self.routing_table[flow_id]["default_capacity"]:
+                return link
+        return congested_link
+    
+    def update_routing_table(self, congested_link, new_link):
+        # current_link = self.routing_table[congested_link]["next_hop"]
+        current_link = self.routing_table.get(congested_link).get("next_hop")
+        self.routing_table[congested_link]["next_hop"] = new_link
+
+        # Update link_used_capacity for both the old and new links
+        self.link_used_capacity[current_link] -= self.routing_table.get(congested_link).get("default_capacity")
+        self.link_used_capacity[new_link] += self.routing_table[congested_link]["default_capacity"]
+
+        print("Link used capacities --- ",self.link_used_capacity)
+
+        # Call the method to update routing on routers
+        for router_ip in self.router_ips:
+            self.update_routing_on_routers(router_ip, self.routing_table)
+
+
+controller = SDWANController(
+    monitor_ip="192.168.100.2", 
+    monitor_port=9000,
+    router_ips=["192.168.15.1","192.168.16.1"],
+    router_password="cisco",
+    router_username="cisco",
+    router_enable_password="cisco"
+)
+
+@app.route('/receive', methods=['POST'])
+def receive_message():
+    # message = request.data.decode()
+    # print(f"Received message: {message}")
+    received_time = time.strftime('%Y-%m-%d %H:%M:%S') 
+    message, received_flow_id = request.data.decode().split(" - ")
+    print(f"Congestion alert received with flowID:{received_flow_id} @ t- {received_time}")
+    if message == "Congestion":
+        controller.handle_congestion_event(received_flow_id)
+        # print("Used capacity: ", controller.link_used_capacity) #Display the used capacity on every congestion
+    
+
+    return "Message received"
+
+
+if __name__ == "__main__":
+    print("Initialising WAN controller...")
+    app.run(host='0.0.0.0', port=controller.monitor_port)
+    print("...Completed.")
+
