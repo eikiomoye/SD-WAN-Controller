@@ -1,0 +1,40 @@
+import random
+from scapy.all import *
+import socket
+
+# List of destination IP addresses
+destination_ips = ["192.168.9.2"]
+
+# Create a TCP/IP socket
+client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+
+# Server address
+server_address = ('192.168.9.2', 8000)  # Use appropriate server IP address and port
+
+try:
+    # Connect to the server
+    client_socket.connect(server_address)
+    print(f'Connected to {server_address}')
+
+    # Generate and send TCP packets with random destination IP
+    for _ in range(1000):
+        destination_ip = random.choice(destination_ips)
+
+        # Generate random values for packet information
+        packet_length = random.randint(100, 1500)
+        window_size = random.randint(1000, 5000)
+
+        # Generate a TCP packet with custom source IP and random destination IP
+        packet = IP(src="192.168.1.2", dst=destination_ip) / TCP(sport=12345, dport=80, window=window_size)
+
+        # Set the packet length
+        packet = packet / Raw(b"A" * packet_length)
+
+        # Send the packet
+        send(packet)
+
+    print("Packets sent successfully!")
+
+finally:
+    # Close the connection
+    client_socket.close()
