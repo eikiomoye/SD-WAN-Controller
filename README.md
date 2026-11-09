@@ -4,6 +4,10 @@ A runnable, dependency-free Python simulator for **flow-level path selection, ba
 
 This is a new portfolio implementation using synthetic telemetry. It is separate from the author's doctoral implementation and published experiments. It does not configure routers, install routes, capture packets or implement an SD-WAN data plane.
 
+## Doctoral research
+
+The [doctoral research companion](research/thesis/README.md) documents the original GNS3 architecture, experimental settings and selected reported throughput values from the supplied PhD report. It includes source page references and unresolved reproduction questions. The original experiment scripts and GNS3 project have not yet been recovered; the simulator below remains a separate synthetic implementation.
+
 ## Quick start
 
 Requires **Python 3.10 or later**. Run these commands from this repository's root. On Windows, use `py` in place of `python` if required.

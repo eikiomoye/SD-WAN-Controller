@@ -1,0 +1,11 @@
+scenario,metric,architecture,value,unit,source_section,printed_page,pdf_viewer_page,evidence_status
+normal_python,maximum_throughput,enhanced,22.28,Mbps,6.5.1,116,117,reported_in_source_not_independently_reproduced
+normal_python,minimum_throughput,enhanced,17.61,Mbps,6.5.1,116,117,reported_in_source_not_independently_reproduced
+link_failure_python,maximum_throughput,enhanced,19.78,Mbps,6.5.3,119,120,reported_in_source_not_independently_reproduced
+link_failure_python,minimum_throughput,enhanced,17.56,Mbps,6.5.3,119,120,reported_in_source_not_independently_reproduced
+link_failure_python,maximum_throughput,traditional,18.98,Mbps,6.5.3,119,120,reported_in_source_not_independently_reproduced
+link_failure_python,minimum_throughput,traditional,16.32,Mbps,6.5.3,119,120,reported_in_source_not_independently_reproduced
+congestion_python,maximum_throughput,enhanced,18.42,Mbps,6.5.5,122,123,reported_in_source_not_independently_reproduced
+congestion_python,maximum_throughput,traditional,17.65,Mbps,6.5.5,122,123,reported_in_source_not_independently_reproduced
+congestion_conclusion_summary,average_throughput,enhanced,11.21,Mbps,7.2,131,132,reported_in_source_not_independently_reproduced
+congestion_conclusion_summary,average_throughput,traditional,7.02,Mbps,7.2,131,132,reported_in_source_not_independently_reproduced
