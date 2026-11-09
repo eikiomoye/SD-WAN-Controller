@@ -1,0 +1,707 @@
+[
+  {
+    "policy": "adaptive",
+    "summary": {
+      "admitted": 8,
+      "rejected": 1,
+      "rerouted": 2,
+      "dropped": 3,
+      "completed": 5,
+      "requested_mbps_ticks": 680,
+      "served_mbps_ticks": 488.0,
+      "service_ratio": 0.717647
+    },
+    "decisions": [
+      {
+        "tick": 0,
+        "flow": "voice-1",
+        "action": "admitted",
+        "link": "fibre"
+      },
+      {
+        "tick": 0,
+        "flow": "video-1",
+        "action": "admitted",
+        "link": "broadband"
+      },
+      {
+        "tick": 1,
+        "flow": "backup-1",
+        "action": "admitted",
+        "link": "fibre"
+      },
+      {
+        "tick": 2,
+        "flow": "voice-2",
+        "action": "admitted",
+        "link": "broadband"
+      },
+      {
+        "tick": 3,
+        "flow": "video-2",
+        "action": "admitted",
+        "link": "broadband"
+      },
+      {
+        "tick": 4,
+        "flow": "video-1",
+        "action": "rerouted",
+        "link": "lte"
+      },
+      {
+        "tick": 4,
+        "flow": "voice-2",
+        "action": "rerouted",
+        "link": "fibre"
+      },
+      {
+        "tick": 4,
+        "flow": "video-2",
+        "action": "dropped",
+        "link": null
+      },
+      {
+        "tick": 4,
+        "flow": "backup-2",
+        "action": "rejected",
+        "link": null
+      },
+      {
+        "tick": 6,
+        "flow": "voice-1",
+        "action": "completed",
+        "link": "fibre"
+      },
+      {
+        "tick": 6,
+        "flow": "voice-3",
+        "action": "admitted",
+        "link": "fibre"
+      },
+      {
+        "tick": 7,
+        "flow": "voice-2",
+        "action": "dropped",
+        "link": null
+      },
+      {
+        "tick": 7,
+        "flow": "voice-3",
+        "action": "dropped",
+        "link": null
+      },
+      {
+        "tick": 8,
+        "flow": "video-1",
+        "action": "completed",
+        "link": "lte"
+      },
+      {
+        "tick": 8,
+        "flow": "video-3",
+        "action": "admitted",
+        "link": "lte"
+      },
+      {
+        "tick": 9,
+        "flow": "backup-1",
+        "action": "completed",
+        "link": "fibre"
+      },
+      {
+        "tick": 9,
+        "flow": "backup-3",
+        "action": "admitted",
+        "link": "broadband"
+      },
+      {
+        "tick": 11,
+        "flow": "video-3",
+        "action": "completed",
+        "link": "lte"
+      },
+      {
+        "tick": 12,
+        "flow": "backup-3",
+        "action": "completed",
+        "link": "broadband"
+      }
+    ],
+    "snapshots": [
+      {
+        "tick": 0,
+        "load_mbps": {
+          "fibre": 2,
+          "broadband": 18,
+          "lte": 0
+        },
+        "active_flows": 2
+      },
+      {
+        "tick": 1,
+        "load_mbps": {
+          "fibre": 27,
+          "broadband": 18,
+          "lte": 0
+        },
+        "active_flows": 3
+      },
+      {
+        "tick": 2,
+        "load_mbps": {
+          "fibre": 27,
+          "broadband": 20,
+          "lte": 0
+        },
+        "active_flows": 4
+      },
+      {
+        "tick": 3,
+        "load_mbps": {
+          "fibre": 27,
+          "broadband": 35,
+          "lte": 0
+        },
+        "active_flows": 5
+      },
+      {
+        "tick": 4,
+        "load_mbps": {
+          "fibre": 29,
+          "broadband": 0,
+          "lte": 18
+        },
+        "active_flows": 4
+      },
+      {
+        "tick": 5,
+        "load_mbps": {
+          "fibre": 29,
+          "broadband": 0,
+          "lte": 18
+        },
+        "active_flows": 4
+      },
+      {
+        "tick": 6,
+        "load_mbps": {
+          "fibre": 29,
+          "broadband": 0,
+          "lte": 18
+        },
+        "active_flows": 4
+      },
+      {
+        "tick": 7,
+        "load_mbps": {
+          "fibre": 25,
+          "broadband": 0,
+          "lte": 18
+        },
+        "active_flows": 2
+      },
+      {
+        "tick": 8,
+        "load_mbps": {
+          "fibre": 25,
+          "broadband": 0,
+          "lte": 15
+        },
+        "active_flows": 2
+      },
+      {
+        "tick": 9,
+        "load_mbps": {
+          "fibre": 0,
+          "broadband": 20,
+          "lte": 15
+        },
+        "active_flows": 2
+      },
+      {
+        "tick": 10,
+        "load_mbps": {
+          "fibre": 0,
+          "broadband": 20,
+          "lte": 15
+        },
+        "active_flows": 2
+      },
+      {
+        "tick": 11,
+        "load_mbps": {
+          "fibre": 0,
+          "broadband": 20,
+          "lte": 0
+        },
+        "active_flows": 1
+      }
+    ]
+  },
+  {
+    "policy": "round_robin",
+    "summary": {
+      "admitted": 8,
+      "rejected": 1,
+      "rerouted": 1,
+      "dropped": 3,
+      "completed": 5,
+      "requested_mbps_ticks": 680,
+      "served_mbps_ticks": 476.0,
+      "service_ratio": 0.7
+    },
+    "decisions": [
+      {
+        "tick": 0,
+        "flow": "voice-1",
+        "action": "admitted",
+        "link": "fibre"
+      },
+      {
+        "tick": 0,
+        "flow": "video-1",
+        "action": "admitted",
+        "link": "broadband"
+      },
+      {
+        "tick": 1,
+        "flow": "backup-1",
+        "action": "admitted",
+        "link": "fibre"
+      },
+      {
+        "tick": 2,
+        "flow": "voice-2",
+        "action": "admitted",
+        "link": "broadband"
+      },
+      {
+        "tick": 3,
+        "flow": "video-2",
+        "action": "admitted",
+        "link": "lte"
+      },
+      {
+        "tick": 4,
+        "flow": "video-1",
+        "action": "dropped",
+        "link": null
+      },
+      {
+        "tick": 4,
+        "flow": "voice-2",
+        "action": "rerouted",
+        "link": "fibre"
+      },
+      {
+        "tick": 4,
+        "flow": "backup-2",
+        "action": "rejected",
+        "link": null
+      },
+      {
+        "tick": 6,
+        "flow": "voice-1",
+        "action": "completed",
+        "link": "fibre"
+      },
+      {
+        "tick": 6,
+        "flow": "voice-3",
+        "action": "admitted",
+        "link": "fibre"
+      },
+      {
+        "tick": 7,
+        "flow": "voice-2",
+        "action": "dropped",
+        "link": null
+      },
+      {
+        "tick": 7,
+        "flow": "voice-3",
+        "action": "dropped",
+        "link": null
+      },
+      {
+        "tick": 8,
+        "flow": "video-2",
+        "action": "completed",
+        "link": "lte"
+      },
+      {
+        "tick": 8,
+        "flow": "video-3",
+        "action": "admitted",
+        "link": "lte"
+      },
+      {
+        "tick": 9,
+        "flow": "backup-1",
+        "action": "completed",
+        "link": "fibre"
+      },
+      {
+        "tick": 9,
+        "flow": "backup-3",
+        "action": "admitted",
+        "link": "fibre"
+      },
+      {
+        "tick": 11,
+        "flow": "video-3",
+        "action": "completed",
+        "link": "lte"
+      },
+      {
+        "tick": 12,
+        "flow": "backup-3",
+        "action": "completed",
+        "link": "fibre"
+      }
+    ],
+    "snapshots": [
+      {
+        "tick": 0,
+        "load_mbps": {
+          "fibre": 2,
+          "broadband": 18,
+          "lte": 0
+        },
+        "active_flows": 2
+      },
+      {
+        "tick": 1,
+        "load_mbps": {
+          "fibre": 27,
+          "broadband": 18,
+          "lte": 0
+        },
+        "active_flows": 3
+      },
+      {
+        "tick": 2,
+        "load_mbps": {
+          "fibre": 27,
+          "broadband": 20,
+          "lte": 0
+        },
+        "active_flows": 4
+      },
+      {
+        "tick": 3,
+        "load_mbps": {
+          "fibre": 27,
+          "broadband": 20,
+          "lte": 15
+        },
+        "active_flows": 5
+      },
+      {
+        "tick": 4,
+        "load_mbps": {
+          "fibre": 29,
+          "broadband": 0,
+          "lte": 15
+        },
+        "active_flows": 4
+      },
+      {
+        "tick": 5,
+        "load_mbps": {
+          "fibre": 29,
+          "broadband": 0,
+          "lte": 15
+        },
+        "active_flows": 4
+      },
+      {
+        "tick": 6,
+        "load_mbps": {
+          "fibre": 29,
+          "broadband": 0,
+          "lte": 15
+        },
+        "active_flows": 4
+      },
+      {
+        "tick": 7,
+        "load_mbps": {
+          "fibre": 25,
+          "broadband": 0,
+          "lte": 15
+        },
+        "active_flows": 2
+      },
+      {
+        "tick": 8,
+        "load_mbps": {
+          "fibre": 25,
+          "broadband": 0,
+          "lte": 15
+        },
+        "active_flows": 2
+      },
+      {
+        "tick": 9,
+        "load_mbps": {
+          "fibre": 20,
+          "broadband": 0,
+          "lte": 15
+        },
+        "active_flows": 2
+      },
+      {
+        "tick": 10,
+        "load_mbps": {
+          "fibre": 20,
+          "broadband": 0,
+          "lte": 15
+        },
+        "active_flows": 2
+      },
+      {
+        "tick": 11,
+        "load_mbps": {
+          "fibre": 20,
+          "broadband": 0,
+          "lte": 0
+        },
+        "active_flows": 1
+      }
+    ]
+  },
+  {
+    "policy": "static",
+    "summary": {
+      "admitted": 8,
+      "rejected": 1,
+      "rerouted": 1,
+      "dropped": 4,
+      "completed": 4,
+      "requested_mbps_ticks": 680,
+      "served_mbps_ticks": 408.0,
+      "service_ratio": 0.6
+    },
+    "decisions": [
+      {
+        "tick": 0,
+        "flow": "voice-1",
+        "action": "admitted",
+        "link": "fibre"
+      },
+      {
+        "tick": 0,
+        "flow": "video-1",
+        "action": "admitted",
+        "link": "fibre"
+      },
+      {
+        "tick": 1,
+        "flow": "backup-1",
+        "action": "admitted",
+        "link": "broadband"
+      },
+      {
+        "tick": 2,
+        "flow": "voice-2",
+        "action": "admitted",
+        "link": "fibre"
+      },
+      {
+        "tick": 3,
+        "flow": "video-2",
+        "action": "admitted",
+        "link": "fibre"
+      },
+      {
+        "tick": 4,
+        "flow": "backup-1",
+        "action": "dropped",
+        "link": null
+      },
+      {
+        "tick": 4,
+        "flow": "backup-2",
+        "action": "rejected",
+        "link": null
+      },
+      {
+        "tick": 6,
+        "flow": "voice-1",
+        "action": "completed",
+        "link": "fibre"
+      },
+      {
+        "tick": 6,
+        "flow": "voice-3",
+        "action": "admitted",
+        "link": "fibre"
+      },
+      {
+        "tick": 7,
+        "flow": "video-1",
+        "action": "rerouted",
+        "link": "lte"
+      },
+      {
+        "tick": 7,
+        "flow": "voice-2",
+        "action": "dropped",
+        "link": null
+      },
+      {
+        "tick": 7,
+        "flow": "video-2",
+        "action": "dropped",
+        "link": null
+      },
+      {
+        "tick": 7,
+        "flow": "voice-3",
+        "action": "dropped",
+        "link": null
+      },
+      {
+        "tick": 8,
+        "flow": "video-1",
+        "action": "completed",
+        "link": "lte"
+      },
+      {
+        "tick": 8,
+        "flow": "video-3",
+        "action": "admitted",
+        "link": "lte"
+      },
+      {
+        "tick": 9,
+        "flow": "backup-3",
+        "action": "admitted",
+        "link": "fibre"
+      },
+      {
+        "tick": 11,
+        "flow": "video-3",
+        "action": "completed",
+        "link": "lte"
+      },
+      {
+        "tick": 12,
+        "flow": "backup-3",
+        "action": "completed",
+        "link": "fibre"
+      }
+    ],
+    "snapshots": [
+      {
+        "tick": 0,
+        "load_mbps": {
+          "fibre": 20,
+          "broadband": 0,
+          "lte": 0
+        },
+        "active_flows": 2
+      },
+      {
+        "tick": 1,
+        "load_mbps": {
+          "fibre": 20,
+          "broadband": 25,
+          "lte": 0
+        },
+        "active_flows": 3
+      },
+      {
+        "tick": 2,
+        "load_mbps": {
+          "fibre": 22,
+          "broadband": 25,
+          "lte": 0
+        },
+        "active_flows": 4
+      },
+      {
+        "tick": 3,
+        "load_mbps": {
+          "fibre": 37,
+          "broadband": 25,
+          "lte": 0
+        },
+        "active_flows": 5
+      },
+      {
+        "tick": 4,
+        "load_mbps": {
+          "fibre": 37,
+          "broadband": 0,
+          "lte": 0
+        },
+        "active_flows": 4
+      },
+      {
+        "tick": 5,
+        "load_mbps": {
+          "fibre": 37,
+          "broadband": 0,
+          "lte": 0
+        },
+        "active_flows": 4
+      },
+      {
+        "tick": 6,
+        "load_mbps": {
+          "fibre": 37,
+          "broadband": 0,
+          "lte": 0
+        },
+        "active_flows": 4
+      },
+      {
+        "tick": 7,
+        "load_mbps": {
+          "fibre": 0,
+          "broadband": 0,
+          "lte": 18
+        },
+        "active_flows": 1
+      },
+      {
+        "tick": 8,
+        "load_mbps": {
+          "fibre": 0,
+          "broadband": 0,
+          "lte": 15
+        },
+        "active_flows": 1
+      },
+      {
+        "tick": 9,
+        "load_mbps": {
+          "fibre": 20,
+          "broadband": 0,
+          "lte": 15
+        },
+        "active_flows": 2
+      },
+      {
+        "tick": 10,
+        "load_mbps": {
+          "fibre": 20,
+          "broadband": 0,
+          "lte": 15
+        },
+        "active_flows": 2
+      },
+      {
+        "tick": 11,
+        "load_mbps": {
+          "fibre": 20,
+          "broadband": 0,
+          "lte": 0
+        },
+        "active_flows": 1
+      }
+    ]
+  }
+]

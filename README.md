@@ -1,62 +1,101 @@
-# SD-WAN-Controller
-SD-WAN (Software Defined Wide Area Networking) is widely regarded as the future of  networking as it integrates programmable features into its architecture. A new architecture is proposed with the aim of improving end-to-end protocol performance.
-SD-WAN Implementation Repository
-This repository contains resources, scripts, and documentation related to the implementation of a Software-Defined Wide Area Network (SD-WAN) solution.
+# SD-WAN Controller: Python Policy Simulator
 
-Overview
-SD-WAN is a revolutionary approach to networking that utilizes software-defined networking (SDN) principles to optimize and manage wide-area networks. This repository serves as a comprehensive guide and resource hub for implementing and understanding SD-WAN technology.
+A runnable, dependency-free Python simulator for **flow-level path selection, bandwidth admission and recovery from link failures or service degradation**.
 
-Table of Contents
-Getting Started
-Key Features
-Requirements
-Installation
-Usage
-Contributing
-License
-Getting Started
-To develop an SD-WAN controller in GNS3, first understand SD-WAN architecture and protocols. Set up GNS3 and configure devices to represent the SD-WAN network. Choose and install an SD-WAN controller (in this case an Ubuntu Docker container is used). Design the network topology, connect devices to the controller, and configure it to manage traffic. Test different scenarios, troubleshoot issues, and document the process for experimentation and refinement.
+This is a new portfolio implementation using synthetic telemetry. It is separate from the author's doctoral implementation and published experiments. It does not configure routers, install routes, capture packets or implement an SD-WAN data plane.
 
-Key Features
-Detailed implementation guides
-Sample configurations and scripts
-Troubleshooting tips and best practices
-Case studies and real-world use cases
-Requirements
-List of prerequisites and system requirements needed to utilize the SD-WAN resources provided in this repository.
+## Quick start
 
-Python 3.7+
-Ubuntu Docker Container
-Access to network devices for configuration in GNS3
-Installation
-To install GNS3:
+Requires **Python 3.10 or later**. Run these commands from this repository's root. On Windows, use `py` in place of `python` if required.
 
-Download GNS3: Visit the GNS3 website and download the appropriate installer for your operating system (Windows, macOS, or Linux).
+```bash
+python -m sdwan examples/failover.json --compare
+python -m sdwan examples/failover.json --policy adaptive --output results/adaptive.json
+python -m unittest discover -s tests -v
+```
 
-Install GNS3: Run the downloaded installer and follow the on-screen instructions. Once installed, launch GNS3.
+No third-party runtime packages, GNS3 installation or network permissions are required. An optional package installation with `python -m pip install .` exposes the equivalent `sdwan-sim` command. The package build uses setuptools; the commands above run directly without installation.
 
-To install Ubuntu Docker container in GNS3:
+## What it demonstrates
 
-Download Ubuntu Docker Container: In GNS3, go to "Preferences" > "Docker" and download the Ubuntu Docker container image.
+- Admission control using reserved bandwidth on each WAN link.
+- Hard per-flow limits for latency, jitter and loss.
+- Three policies with identical eligibility checks: adaptive scoring, round-robin and static link priority.
+- Recovery for active flows when a link fails or stops meeting their limits.
+- Explicit rejection and drop decisions when no suitable path is available.
+- JSON decision logs, per-tick link loads and aggregate service metrics.
+- Unit and command-line tests, plus a GitHub Actions workflow.
 
-Create Ubuntu Docker VM: Create a new project, drag and drop the "Ubuntu" Docker container to the workspace, and start the container.
+## Included experiment
 
-To install Python modules in the Docker container:
+`examples/failover.json` defines 12 simulation ticks, three synthetic WAN links, and nine flows representing voice, video and backup traffic. Broadband fails at tick 4. Fibre latency rises at tick 7. Both recover at tick 9.
 
-Access Docker Container: Once the Ubuntu Docker container is running, access it by right-clicking and selecting "Console" or using SSH.
+Run:
 
-Install Python: Update the package lists for upgrades and install Python.
+```bash
+python -m sdwan examples/failover.json --compare --output results/comparison.json
+```
 
-sudo apt-get update
-sudo apt-get install python3
-Install Python Modules: Use pip to install Python modules as required.
+The deterministic result is:
 
-sudo apt-get install python3-pip
-pip3 install <module_name>
-Repeat the last step for any additional Python modules needed within the Docker container. Adjust the package names as required.
+| Policy | Admitted | Rejected | Reroute events | Dropped | Completed | Service ratio |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: |
+| Adaptive | 8 | 1 | 2 | 3 | 5 | 0.717647 |
+| Round-robin | 8 | 1 | 1 | 3 | 5 | 0.700000 |
+| Static priority | 8 | 1 | 1 | 4 | 4 | 0.600000 |
 
-Usage
-Demonstrate how to use the resources and scripts included in the repository to implement SD-WAN in your environment.
+`examples/expected_comparison.json` contains the full corresponding output. These are results of one deliberately small synthetic workload, not evidence of general superiority. A different workload, link order or set of weights may favour another policy.
 
-Contributing
-Instructions for contributors, including guidelines, code of conduct, and steps to submit pull requests is based on the procedures of GitHub.
+The **service ratio** is the sum of reserved Mbps across served ticks divided by total requested Mbps across all requested durations. It includes rejected and subsequently dropped demand in the denominator. It is not measured throughput or a packet delivery ratio. An empty workload reports 1.0 by convention.
+
+## Policy design
+
+Every policy first excludes links that are down, lack capacity, or violate the flow's latency, jitter or loss limits.
+
+| Policy | Selection among eligible links |
+| --- | --- |
+| `adaptive` | Lowest weighted score using projected utilisation, latency, jitter, loss and cost |
+| `round_robin` | Next eligible link in a rotating input-order list |
+| `static` | First eligible link in scenario input order, with fallback |
+
+The adaptive score is:
+
+```text
+0.45 * projected_utilisation
++ 0.25 * latency_ms / 100
++ 0.10 * jitter_ms / 20
++ 0.15 * loss_pct / 1
++ 0.05 * cost / 10
+```
+
+Reference scales and weights are illustrative constants. They are neither trained nor tuned against real measurements. Values are not clipped to one. `cost` is a non-negative relative cost index, not a currency or financial charge. Equal adaptive scores are resolved by link name. Healthy flows stay on their paths; the controller does not continuously rebalance them.
+
+## Scenario format
+
+See [the scenario guide](docs/SCENARIOS.md) for fields, units, validation and tick ordering. All input is local JSON; the simulator performs no network calls.
+
+## Source guide
+
+| Path | Purpose |
+| --- | --- |
+| `sdwan/core.py` | Validated link/flow models, controller and simulation loop |
+| `sdwan/__main__.py` | CLI, comparison table and JSON export |
+| `tests/test_core.py` | Admission, recovery, validation and CLI tests |
+| `examples/failover.json` | Synthetic workload and telemetry events |
+| `examples/expected_comparison.json` | Reproducible output for all policies |
+| `docs/SCENARIOS.md` | Schema, assumptions and execution semantics |
+| `docs/VALIDATION.md` | Checks performed and scope of evidence |
+
+## Limitations and extensions
+
+This is a single-site, parallel-link model with fixed flow demand. It has no queues, congestion-dependent latency, TCP dynamics, packet scheduling, topology discovery or live telemetry collection. Recovery is instantaneous at tick boundaries with no switching penalty. Dropped or rejected flows are not retried. A flow that completes may previously have been rerouted.
+
+Useful extensions include workload sweeps, sensitivity analysis of the scoring weights, recovery delays, and an explicitly separate adapter for a controlled network laboratory. A router or GNS3 integration would require additional implementation and validation.
+
+## Contributing
+
+See [CONTRIBUTING.md](CONTRIBUTING.md). Include a reproducible scenario with changes to scheduling or policy behaviour. Use synthetic data and exclude passwords, network credentials and personal data from contributions.
+
+## Licence
+
+MIT. See [LICENSE](LICENSE).

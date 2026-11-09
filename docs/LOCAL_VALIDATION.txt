@@ -1,0 +1,8 @@
+Local validation: 9 November 2026
+Python: 3.12.14
+Operating system: Linux
+18 unittest tests: PASS
+Complete example output matches checked fixture: PASS
+Package build and installation in a temporary virtual environment: PASS
+Installed sdwan-sim command: PASS
+Remote GitHub publication and CI: not performed (no write permission).

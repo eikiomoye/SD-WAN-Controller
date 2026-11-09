@@ -1,0 +1,142 @@
+{
+  "ticks": 12,
+  "links": [
+    {
+      "name": "fibre",
+      "capacity_mbps": 40,
+      "latency_ms": 18,
+      "jitter_ms": 2,
+      "loss_pct": 0.1,
+      "cost": 8
+    },
+    {
+      "name": "broadband",
+      "capacity_mbps": 60,
+      "latency_ms": 35,
+      "jitter_ms": 5,
+      "loss_pct": 0.3,
+      "cost": 3
+    },
+    {
+      "name": "lte",
+      "capacity_mbps": 20,
+      "latency_ms": 45,
+      "jitter_ms": 8,
+      "loss_pct": 0.7,
+      "cost": 12
+    }
+  ],
+  "flows": [
+    {
+      "id": "voice-1",
+      "arrival": 0,
+      "duration": 6,
+      "demand_mbps": 2,
+      "max_latency_ms": 40,
+      "max_jitter_ms": 6,
+      "max_loss_pct": 0.5
+    },
+    {
+      "id": "video-1",
+      "arrival": 0,
+      "duration": 8,
+      "demand_mbps": 18,
+      "max_latency_ms": 60,
+      "max_jitter_ms": 15,
+      "max_loss_pct": 1
+    },
+    {
+      "id": "backup-1",
+      "arrival": 1,
+      "duration": 8,
+      "demand_mbps": 25,
+      "max_latency_ms": 150,
+      "max_jitter_ms": 50,
+      "max_loss_pct": 3
+    },
+    {
+      "id": "voice-2",
+      "arrival": 2,
+      "duration": 8,
+      "demand_mbps": 2,
+      "max_latency_ms": 40,
+      "max_jitter_ms": 6,
+      "max_loss_pct": 0.5
+    },
+    {
+      "id": "video-2",
+      "arrival": 3,
+      "duration": 5,
+      "demand_mbps": 15,
+      "max_latency_ms": 60,
+      "max_jitter_ms": 15,
+      "max_loss_pct": 1
+    },
+    {
+      "id": "backup-2",
+      "arrival": 4,
+      "duration": 4,
+      "demand_mbps": 30,
+      "max_latency_ms": 150,
+      "max_jitter_ms": 50,
+      "max_loss_pct": 3
+    },
+    {
+      "id": "voice-3",
+      "arrival": 6,
+      "duration": 4,
+      "demand_mbps": 2,
+      "max_latency_ms": 40,
+      "max_jitter_ms": 6,
+      "max_loss_pct": 0.5
+    },
+    {
+      "id": "video-3",
+      "arrival": 8,
+      "duration": 3,
+      "demand_mbps": 15,
+      "max_latency_ms": 60,
+      "max_jitter_ms": 15,
+      "max_loss_pct": 1
+    },
+    {
+      "id": "backup-3",
+      "arrival": 9,
+      "duration": 3,
+      "demand_mbps": 20,
+      "max_latency_ms": 150,
+      "max_jitter_ms": 50,
+      "max_loss_pct": 3
+    }
+  ],
+  "events": [
+    {
+      "tick": 4,
+      "link": "broadband",
+      "changes": {
+        "up": false
+      }
+    },
+    {
+      "tick": 7,
+      "link": "fibre",
+      "changes": {
+        "latency_ms": 80
+      }
+    },
+    {
+      "tick": 9,
+      "link": "broadband",
+      "changes": {
+        "up": true
+      }
+    },
+    {
+      "tick": 9,
+      "link": "fibre",
+      "changes": {
+        "latency_ms": 18
+      }
+    }
+  ]
+}

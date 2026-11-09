@@ -1,0 +1,17 @@
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "sdwan-policy-simulator"
+version = "0.1.0"
+description = "Deterministic flow-level SD-WAN path selection and failover simulator"
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = []
+
+[project.scripts]
+sdwan-sim = "sdwan.__main__:main"
+
+[tool.setuptools.packages.find]
+include = ["sdwan*"]
